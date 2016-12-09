@@ -609,7 +609,7 @@ def search_worker_thread(args, account_queue, account_failures, search_items_que
                             captcha_token = token_request(args, status, captcha_url)
                             if 'ERROR' in captcha_token:
                                 log.warning("Unable to resolve captcha, please check your 2captcha API key and/or wallet balance")
-                                account_failures.append({'account': account, 'last_fail_time': now(), 'reason': 'catpcha failed to verify'})
+                                account_failures.append({'account': account, 'last_fail_time': now() - (args.account_rest_interval - args.captcha_rest_interval), 'reason': 'catpcha failed to verify'})
                                 break
                                 if 'TIMEOUT' in captcha_token:
                                     log.warning("2captcha server response timed out, service may be temporarily unavailable")
