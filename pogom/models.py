@@ -939,6 +939,7 @@ class WorkerStatus(BaseModel):
     fail = IntegerField()
     no_items = IntegerField()
     skip = IntegerField()
+    captchas = IntegerField(default=0)
     last_modified = DateTimeField(index=True)
     message = CharField(max_length=255)
     last_scan_date = DateTimeField(index=True)
@@ -954,6 +955,7 @@ class WorkerStatus(BaseModel):
                 'fail': status['fail'],
                 'no_items': status['noitems'],
                 'skip': status['skip'],
+                'captchas': status['captchas'],
                 'last_modified': datetime.utcnow(),
                 'message': status['message'],
                 'last_scan_date': status.get('last_scan_date', datetime.utcnow()),
@@ -2083,5 +2085,7 @@ def database_migrate(db, old_ver):
         db.drop_tables([WorkerStatus])
 
     if old_ver < 11:
-
         db.drop_tables([ScanSpawnPoint])
+        migrate(
+            migrator.add_column('workerstatus', 'captchas', IntegerField(default=0))
+        )
