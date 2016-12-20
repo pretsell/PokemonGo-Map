@@ -735,7 +735,7 @@ def search_worker_thread(args, account_queue, account_failures, search_items_que
 
                         status['message'] = 'Processing details of {} gyms for location {:6f},{:6f}...'.format(len(gyms_to_update), step_location[0], step_location[1])
                         log.debug(status['message'])
-                        
+
                         # Since we made more requests at the current location, we will update the last scan time.
                         status['last_scan_date'] = datetime.utcnow()
                         dbq.put((WorkerStatus, {0: WorkerStatus.db_format(status)}))
