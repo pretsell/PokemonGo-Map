@@ -622,14 +622,14 @@ def search_worker_thread(args, account_queue, account_failures, search_items_que
                 # Make the actual request. (finally!)
                 scan_date = datetime.utcnow()
                 response_dict = map_request(api, step_location, args.jitter)
-                status['last_scan_date'] = datetime.utcnow()
 
                 # Record the time and place the worker made the request at
+                status['last_scan_date'] = datetime.utcnow()
                 status['latitude'] = step_location[0]
                 status['longitude'] = step_location[1]
                 dbq.put((WorkerStatus, {0: WorkerStatus.db_format(status)}))
 
-                # G'damnit, nothing back. Mark it up, sleep, carry on
+                # Nothing back. Mark it up, sleep, carry on
                 if not response_dict:
                     status['fail'] += 1
                     consecutive_fails += 1
@@ -735,6 +735,10 @@ def search_worker_thread(args, account_queue, account_failures, search_items_que
 
                         status['message'] = 'Processing details of {} gyms for location {:6f},{:6f}...'.format(len(gyms_to_update), step_location[0], step_location[1])
                         log.debug(status['message'])
+                        
+                        # Since we made more requests at the current location, we will update the last scan time.
+                        status['last_scan_date'] = datetime.utcnow()
+                        dbq.put((WorkerStatus, {0: WorkerStatus.db_format(status)}))
 
                         if gym_responses:
                             parse_gyms(args, gym_responses, whq, dbq)
@@ -879,7 +883,7 @@ def calc_distance(pos1, pos2):
 
 def check_speed_limit(args, previous_lat, previous_lon, next_location, last_scan_date):
     if args.kph > 0:
-        previous_location = [previous_lat,previous_lon]
+        previous_location = [previous_lat, previous_lon]
         move_distance = calc_distance(previous_location, next_location)
         time_elapsed = (datetime.utcnow() - last_scan_date).total_seconds()
 
