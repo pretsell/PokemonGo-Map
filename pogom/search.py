@@ -623,11 +623,9 @@ def search_worker_thread(args, account_queue, account_failures, search_items_que
                 scan_date = datetime.utcnow()
                 response_dict = map_request(api, step_location, args.jitter)
 
-                # Record the time and place the worker made the request at
-                status['last_scan_date'] = datetime.utcnow()
+                # Record the place the worker made the request at
                 status['latitude'] = step_location[0]
                 status['longitude'] = step_location[1]
-                dbq.put((WorkerStatus, {0: WorkerStatus.db_format(status)}))
 
                 # Nothing back. Mark it up, sleep, carry on
                 if not response_dict:
@@ -635,6 +633,8 @@ def search_worker_thread(args, account_queue, account_failures, search_items_que
                     consecutive_fails += 1
                     status['message'] = messages['invalid']
                     log.error(status['message'])
+                    status['last_scan_date'] = datetime.utcnow()
+                    dbq.put((WorkerStatus, {0: WorkerStatus.db_format(status)}))
                     time.sleep(scheduler.delay(status['last_scan_date']))
                     continue
 
@@ -746,6 +746,8 @@ def search_worker_thread(args, account_queue, account_failures, search_items_que
                 # Delay the desired amount after "scan" completion
                 delay = scheduler.delay(status['last_scan_date'])
                 status['message'] += ', sleeping {}s until {}'.format(delay, time.strftime('%H:%M:%S', time.localtime(time.time() + args.scan_delay)))
+                status['last_scan_date'] = datetime.utcnow()
+                dbq.put((WorkerStatus, {0: WorkerStatus.db_format(status)}))
 
                 time.sleep(delay)
 
