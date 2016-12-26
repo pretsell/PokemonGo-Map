@@ -610,15 +610,34 @@ def search_worker_thread(args, account_queue, account_failures, search_items_que
                         continue
 
                 # Too late?
-                if leaves and now() > (leaves - args.min_seconds_left):
+                if args.speed_scan:
+                    extra_delay = 0
+                else:
+                    extra_delay = check_speed_limit(args, status['latitude'], status['longitude'], step_location, status['last_scan_date'])
+                continue_time = time.time() + extra_delay
+                if leaves and continue_time > (leaves - args.min_seconds_left):
                     scheduler.task_done(status)
                     status['skip'] += 1
                     # it is slightly silly to put this in status['message'] since it'll be overwritten very shortly after. Oh well.
-                    status['message'] = messages['late']
-                    log.info(status['message'])
+                    if time.time() > (leaves - args.min_seconds_left):
+                        status['message'] = messages['late']
+                    else:
+                        status['message'] = 'Skipping {:6f},{:6f}; outside time and speed constraints'.format(step_location[0], step_location[1])
+                    log.warning(status['message'])
                     # No sleep here; we've not done anything worth sleeping for. Plus we clearly need to catch up!
                     continue
 
+                # Too fast?
+                if extra_delay:
+                    status['message'] = 'Too fast for {:6f},{:6f}; waiting {}s...'.format(step_location[0], step_location[1], extra_delay)
+                    log.info(status['message'])
+                    continue_time = time.time() + extra_delay
+
+                    while time.time() < continue_time:
+                        time.sleep(1)
+                        remain = int(continue_time - time.time())
+                        if remain:
+                            status['message'] = 'Too fast for {:6f},{:6f}; waiting {}s...'.format(step_location[0], step_location[1], remain)
                 status['message'] = messages['search']
                 log.debug(status['message'])
 
@@ -638,19 +657,19 @@ def search_worker_thread(args, account_queue, account_failures, search_items_que
                 # Make the actual request. (finally!)
                 scan_date = datetime.utcnow()
                 response_dict = map_request(api, step_location, args.jitter)
-                status['last_scan_date'] = datetime.utcnow()
 
-                # Record the time and place the worker made the request at
+                # Record the place the worker made the request at
                 status['latitude'] = step_location[0]
                 status['longitude'] = step_location[1]
-                dbq.put((WorkerStatus, {0: WorkerStatus.db_format(status)}))
 
-                # G'damnit, nothing back. Mark it up, sleep, carry on
+                # Nothing back. Mark it up, sleep, carry on
                 if not response_dict:
                     status['fail'] += 1
                     consecutive_fails += 1
                     status['message'] = messages['invalid']
                     log.error(status['message'])
+                    status['last_scan_date'] = datetime.utcnow()
+                    dbq.put((WorkerStatus, {0: WorkerStatus.db_format(status)}))
                     time.sleep(scheduler.delay(status['last_scan_date']))
                     continue
 
@@ -757,12 +776,18 @@ def search_worker_thread(args, account_queue, account_failures, search_items_que
                         status['message'] = 'Processing details of {} gyms for location {:6f},{:6f}...'.format(len(gyms_to_update), step_location[0], step_location[1])
                         log.debug(status['message'])
 
+                        # Since we made more requests at the current location, we will update the last scan time.
+                        status['last_scan_date'] = datetime.utcnow()
+                        dbq.put((WorkerStatus, {0: WorkerStatus.db_format(status)}))
+
                         if gym_responses:
                             parse_gyms(args, gym_responses, whq, dbq)
 
                 # Delay the desired amount after "scan" completion
                 delay = scheduler.delay(status['last_scan_date'])
                 status['message'] += ', sleeping {}s until {}'.format(delay, time.strftime('%H:%M:%S', time.localtime(time.time() + args.scan_delay)))
+                status['last_scan_date'] = datetime.utcnow()
+                dbq.put((WorkerStatus, {0: WorkerStatus.db_format(status)}))
 
                 time.sleep(delay)
 
@@ -900,6 +925,31 @@ def calc_distance(pos1, pos2):
 
     return d
 
+
+def check_speed_limit(args, previous_lat, previous_lon, next_location, last_scan_date):
+    if args.kph > 0:
+        previous_location = [previous_lat, previous_lon]
+        move_distance = calc_distance(previous_location, next_location)
+        time_elapsed = (datetime.utcnow() - last_scan_date).total_seconds()
+
+        if time_elapsed <= 0:
+            time_elapsed = 0.001
+        projected_speed = 3600.0 * move_distance / time_elapsed
+        log.debug('Move distance: %s k; time elapsed: %s s; Projected speed: %s kph', move_distance, time_elapsed, projected_speed)
+        if projected_speed > args.kph:
+            extra_delay = int(move_distance / args.kph * 3600.0 - time_elapsed) + 1
+            return extra_delay
+
+    return 0
+
+
+# Delay each thread start time so that logins occur after delay.
+def stagger_thread(args, account):
+    if args.accounts.index(account) == 0:
+        return  # No need to delay the first one.
+    delay = args.accounts.index(account) * args.login_delay + ((random.random() - .5) / 2)
+    log.debug('Delaying thread startup for %.2f seconds', delay)
+    time.sleep(delay)
 
 class TooManyLoginAttempts(Exception):
     pass
