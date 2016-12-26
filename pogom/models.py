@@ -2202,7 +2202,7 @@ def database_migrate(db, old_ver):
 
     if old_ver < 12:
         migrate(
-            migrator.add_column('workerstatus', 'captchas', IntegerField(default=0))
+            migrator.add_column('workerstatus', 'captchas', IntegerField(default=0)),
             migrator.drop_not_null('pokemon', 'spawnpoint_id'),
             migrator.add_column('pokemon', 'pokestop_id', CharField(null=True))
         )
