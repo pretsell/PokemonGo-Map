@@ -183,7 +183,9 @@ def get_args():
                         action='store_true', default=False)
     parser.add_argument('-kph', '--kph',
                         help='Set a maximum speed in km/hour for scanner movement', type=int, default=35)
-    parser.add_argument('--dump-spawnpoints', help='dump the spawnpoints from the db to json (only for use with -ss)',
+    parser.add_argument('-clss', '--sscluster',
+                        help='Cluster spawnpoints before use (with -ss and no .json)', action='store_true', default=False)
+    parser.add_argument('--dump-spawnpoints', help='Dump the spawnpoints from the db to json (only for use with -ss).',
                         action='store_true', default=False)
     parser.add_argument('-pd', '--purge-data',
                         help='Clear pokemon from database this many hours after they disappear \
@@ -339,6 +341,10 @@ def get_args():
             errors.append('Missing `username` either as -u/--username, csv file using -ac, or in config.')
         else:
             num_usernames = len(args.username)
+
+        if args.sscluster:
+            if args.spawnpoint_scanning is False:
+                errors.append('You enabled spawnpoint clustering, but without using spawnpoints!')
 
         if args.location is None:
             errors.append('Missing `location` either as -l/--location or in config.')
