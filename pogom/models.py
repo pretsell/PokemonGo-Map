@@ -36,7 +36,7 @@ args = get_args()
 flaskDb = FlaskDB()
 cache = TTLCache(maxsize=100, ttl=60 * 5)
 
-db_schema_version = 12
+db_schema_version = 13
 
 
 class MyRetryDB(RetryOperationalError, PooledMySQLDatabase):
@@ -2203,7 +2203,11 @@ def database_migrate(db, old_ver):
 
     if old_ver < 12:
         migrate(
-            migrator.add_column('workerstatus', 'captchas', IntegerField(default=0)),
+            migrator.add_column('workerstatus', 'captchas', IntegerField(default=0))
+        )
+
+    if old_ver < 13:
+        migrate (	
             migrator.drop_not_null('pokemon', 'spawnpoint_id'),
             migrator.add_column('pokemon', 'pokestop_id', CharField(null=True))
         )
