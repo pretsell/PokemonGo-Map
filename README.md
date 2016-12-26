@@ -1,15 +1,16 @@
 # PokemonGo Map - Pretsell Build v4
 ## PRs Used:
 * [1476] (https://github.com/PokemonGoMap/PokemonGo-Map/pull/1476)
-* [1573] (https://github.com/PokemonGoMap/PokemonGo-Map/pull/1476)
-* [1578] (https://github.com/PokemonGoMap/PokemonGo-Map/pull/1476)
-* [1604] (https://github.com/PokemonGoMap/PokemonGo-Map/pull/1476)
-* [1609] (https://github.com/PokemonGoMap/PokemonGo-Map/pull/1476)
-* [1633] (https://github.com/PokemonGoMap/PokemonGo-Map/pull/1476)
-* [1634] (https://github.com/PokemonGoMap/PokemonGo-Map/pull/1476)
-* [1640] (https://github.com/PokemonGoMap/PokemonGo-Map/pull/1476)
-* [1645] (https://github.com/PokemonGoMap/PokemonGo-Map/pull/1476)
-* [1646] (https://github.com/PokemonGoMap/PokemonGo-Map/pull/1476)
+* [1573] (https://github.com/PokemonGoMap/PokemonGo-Map/pull/1573)
+* [1578] (https://github.com/PokemonGoMap/PokemonGo-Map/pull/1578)
+* [1586] (https://github.com/PokemonGoMap/PokemonGo-Map/pull/1586)
+* [1604] (https://github.com/PokemonGoMap/PokemonGo-Map/pull/1604)
+* [1609] (https://github.com/PokemonGoMap/PokemonGo-Map/pull/1609)
+* [1633] (https://github.com/PokemonGoMap/PokemonGo-Map/pull/1633)
+* [1634] (https://github.com/PokemonGoMap/PokemonGo-Map/pull/1634)
+* [1640] (https://github.com/PokemonGoMap/PokemonGo-Map/pull/1640)
+* [1645] (https://github.com/PokemonGoMap/PokemonGo-Map/pull/1645)
+* [1646] (https://github.com/PokemonGoMap/PokemonGo-Map/pull/1646)
 
 
 # PokemonGo Map
